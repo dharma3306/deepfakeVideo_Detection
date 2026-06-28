@@ -1,0 +1,13 @@
+uploads/
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+*.h5
+*.pt
+*.pth
+.DS_Store
+*.egg-info/
+dist/
+build/

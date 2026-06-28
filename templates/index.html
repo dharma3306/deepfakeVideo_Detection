@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DeepGuard — AI Deepfake Video Detection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0c14;
+      --surface:  #111420;
+      --card:     #161b2e;
+      --border:   #1f2640;
+      --accent:   #00d4aa;
+      --accent2:  #7c3aed;
+      --danger:   #ef4444;
+      --safe:     #10b981;
+      --text:     #e2e8f0;
+      --muted:    #64748b;
+      --mono:     'JetBrains Mono', monospace;
+      --sans:     'Space Grotesk', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(10,12,20,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-weight: 700; font-size: 1.2rem; letter-spacing: -0.02em;
+    }
+    .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: .9rem; transition: color .2s; }
+    .nav-links a:hover { color: var(--accent); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center;
+      padding: 8rem 2rem 4rem;
+      position: relative;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,212,170,.08) 0%, transparent 70%),
+                  radial-gradient(ellipse 50% 40% at 80% 80%, rgba(124,58,237,.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(0,212,170,.1); border: 1px solid rgba(0,212,170,.25);
+      color: var(--accent); padding: .35rem .9rem; border-radius: 100px;
+      font-size: .8rem; font-family: var(--mono); margin-bottom: 2rem;
+      letter-spacing: .05em;
+    }
+    .hero-badge::before { content: '●'; font-size: .5rem; }
+    h1 {
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      font-weight: 700; line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+    }
+    h1 span { color: var(--accent); }
+    .hero-sub {
+      max-width: 580px; color: var(--muted); line-height: 1.7;
+      font-size: 1.05rem; margin-bottom: 3rem;
+    }
+    .hero-stats {
+      display: flex; gap: 3rem; justify-content: center;
+      margin-bottom: 4rem; flex-wrap: wrap;
+    }
+    .stat { text-align: center; }
+    .stat-val { font-family: var(--mono); font-size: 2rem; font-weight: 600; color: var(--accent); }
+    .stat-lbl { font-size: .8rem; color: var(--muted); margin-top: .25rem; text-transform: uppercase; letter-spacing: .08em; }
+    .cta-btn {
+      background: var(--accent); color: #0a0c14;
+      border: none; padding: .9rem 2.5rem; border-radius: 8px;
+      font-family: var(--sans); font-weight: 600; font-size: 1rem;
+      cursor: pointer; transition: all .2s; text-decoration: none;
+      display: inline-block;
+    }
+    .cta-btn:hover { background: #00e5b8; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,212,170,.3); }
+
+    /* UPLOAD SECTION */
+    .section { padding: 5rem 2rem; max-width: 900px; margin: 0 auto; }
+    .section-label {
+      font-family: var(--mono); font-size: .75rem; color: var(--accent);
+      letter-spacing: .15em; text-transform: uppercase; margin-bottom: 1rem;
+    }
+    .section-title { font-size: 2rem; font-weight: 700; margin-bottom: .75rem; letter-spacing: -0.02em; }
+    .section-desc { color: var(--muted); line-height: 1.7; margin-bottom: 2.5rem; }
+
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 16px; padding: 4rem 2rem;
+      text-align: center; cursor: pointer;
+      transition: all .25s; position: relative;
+      background: var(--card);
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(0,212,170,.04);
+    }
+    .drop-icon { font-size: 3rem; margin-bottom: 1rem; opacity: .6; }
+    .drop-title { font-size: 1.1rem; font-weight: 600; margin-bottom: .5rem; }
+    .drop-sub { color: var(--muted); font-size: .9rem; }
+    .drop-formats { font-family: var(--mono); font-size: .75rem; color: var(--muted); margin-top: 1rem; }
+    #file-input { display: none; }
+
+    /* FILE INFO */
+    .file-info {
+      display: none;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem 1.5rem;
+      margin-top: 1.5rem;
+      align-items: center; gap: 1rem;
+    }
+    .file-info.show { display: flex; }
+    .file-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .file-details { flex: 1; }
+    .file-name { font-weight: 600; font-size: .95rem; margin-bottom: .2rem; }
+    .file-size { color: var(--muted); font-size: .8rem; font-family: var(--mono); }
+    .remove-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.2rem; padding: .25rem; transition: color .2s; }
+    .remove-btn:hover { color: var(--danger); }
+
+    .analyze-btn {
+      display: none; width: 100%; margin-top: 1.5rem;
+      background: var(--accent); color: #0a0c14;
+      border: none; padding: 1rem; border-radius: 10px;
+      font-family: var(--sans); font-weight: 700; font-size: 1rem;
+      cursor: pointer; transition: all .2s;
+    }
+    .analyze-btn.show { display: block; }
+    .analyze-btn:hover:not(:disabled) { background: #00e5b8; transform: translateY(-1px); }
+    .analyze-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    /* PROGRESS */
+    .progress-wrap { display: none; margin-top: 1.5rem; }
+    .progress-wrap.show { display: block; }
+    .progress-label { font-size: .85rem; color: var(--muted); margin-bottom: .75rem; display: flex; justify-content: space-between; }
+    .progress-track { height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .progress-bar { height: 100%; width: 0; background: var(--accent); border-radius: 4px; transition: width .3s ease; }
+    .progress-steps { margin-top: 1rem; }
+    .step {
+      display: flex; align-items: center; gap: .75rem;
+      padding: .6rem 0; font-size: .85rem; color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .step:last-child { border: none; }
+    .step-icon { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: .65rem; flex-shrink: 0; }
+    .step.done .step-icon { background: var(--accent); border-color: var(--accent); color: #0a0c14; }
+    .step.active .step-icon { border-color: var(--accent); color: var(--accent); animation: spin .8s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .step.done, .step.active { color: var(--text); }
+
+    /* RESULT */
+    .result-card { display: none; margin-top: 2rem; }
+    .result-card.show { display: block; }
+
+    .verdict {
+      border-radius: 16px; padding: 2.5rem;
+      text-align: center; margin-bottom: 1.5rem;
+      position: relative; overflow: hidden;
+    }
+    .verdict.fake { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.25); }
+    .verdict.real { background: rgba(16,185,129,.08); border: 1px solid rgba(16,185,129,.25); }
+    .verdict-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .verdict-label { font-family: var(--mono); font-size: .8rem; letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem; }
+    .verdict.fake .verdict-label { color: var(--danger); }
+    .verdict.real .verdict-label { color: var(--safe); }
+    .verdict-title { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: .5rem; }
+    .verdict.fake .verdict-title { color: var(--danger); }
+    .verdict.real .verdict-title { color: var(--safe); }
+    .verdict-conf { font-size: 1rem; color: var(--muted); }
+    .verdict-conf span { font-family: var(--mono); font-weight: 600; }
+    .verdict.fake .verdict-conf span { color: var(--danger); }
+    .verdict.real .verdict-conf span { color: var(--safe); }
+
+    /* Confidence bar */
+    .conf-bar-wrap { margin: 1.5rem 0 .5rem; }
+    .conf-bar-track { height: 8px; background: var(--border); border-radius: 8px; overflow: hidden; }
+    .conf-bar-fill { height: 100%; border-radius: 8px; transition: width 1s ease; }
+    .verdict.fake .conf-bar-fill { background: var(--danger); }
+    .verdict.real .conf-bar-fill { background: var(--safe); }
+
+    /* Metrics grid */
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .metric-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem;
+    }
+    .metric-title { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .5rem; font-family: var(--mono); }
+    .metric-val { font-family: var(--mono); font-size: 1.4rem; font-weight: 600; color: var(--text); }
+    .metric-sub { font-size: .75rem; color: var(--muted); margin-top: .25rem; }
+
+    .reset-btn {
+      width: 100%; background: none; border: 1px solid var(--border);
+      color: var(--muted); padding: .85rem; border-radius: 10px;
+      font-family: var(--sans); font-size: .9rem; cursor: pointer;
+      transition: all .2s; margin-top: .5rem;
+    }
+    .reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* HOW IT WORKS */
+    .how-section {
+      padding: 5rem 2rem;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .how-inner { max-width: 900px; margin: 0 auto; }
+    .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 2.5rem; }
+    .how-step { position: relative; padding: 1.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 14px; }
+    .how-num { font-family: var(--mono); font-size: .75rem; color: var(--accent); margin-bottom: 1rem; letter-spacing: .1em; }
+    .how-icon { font-size: 1.8rem; margin-bottom: .75rem; }
+    .how-step h3 { font-size: 1rem; font-weight: 600; margin-bottom: .5rem; }
+    .how-step p { font-size: .85rem; color: var(--muted); line-height: 1.6; }
+
+    /* TECH STACK */
+    .tech-section { padding: 5rem 2rem; max-width: 900px; margin: 0 auto; }
+    .tech-grid { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2rem; }
+    .tech-pill {
+      background: var(--card); border: 1px solid var(--border);
+      padding: .5rem 1.1rem; border-radius: 100px;
+      font-family: var(--mono); font-size: .8rem; color: var(--muted);
+      transition: all .2s;
+    }
+    .tech-pill:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem; text-align: center;
+      color: var(--muted); font-size: .85rem;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* ERROR */
+    .error-msg {
+      display: none; background: rgba(239,68,68,.08);
+      border: 1px solid rgba(239,68,68,.25); border-radius: 10px;
+      padding: 1rem 1.25rem; color: var(--danger); margin-top: 1rem;
+      font-size: .9rem;
+    }
+    .error-msg.show { display: block; }
+
+    @media (max-width: 600px) {
+      nav { padding: .75rem 1rem; }
+      .nav-links { display: none; }
+      .hero-stats { gap: 1.5rem; }
+      h1 { font-size: 2.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    DeepGuard
+  </div>
+  <div class="nav-links">
+    <a href="#detect">Detect</a>
+    <a href="#how">How It Works</a>
+    <a href="#tech">Technology</a>
+    <a href="/about">About</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">AI-Powered Detection System</div>
+  <h1>Detect <span>Deepfakes</span><br>Before They Deceive</h1>
+  <p class="hero-sub">
+    Upload any video and our GRU-based AI model analyzes temporal frame inconsistencies and pixel-level anomalies to determine if it's authentic or AI-generated.
+  </p>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-val">92%</div>
+      <div class="stat-lbl">Detection Accuracy</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">24fps</div>
+      <div class="stat-lbl">Real-time Processing</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">25%</div>
+      <div class="stat-lbl">Fewer False Positives</div>
+    </div>
+  </div>
+  <a href="#detect" class="cta-btn">Analyze a Video →</a>
+</section>
+
+<!-- DETECT SECTION -->
+<section class="section" id="detect">
+  <p class="section-label">// core feature</p>
+  <h2 class="section-title">Upload &amp; Analyze</h2>
+  <p class="section-desc">Drop any video file below. Our model extracts 16 evenly-spaced frames, analyzes temporal inconsistencies using GRU sequential processing, and returns a prediction in seconds.</p>
+
+  <div class="drop-zone" id="drop-zone">
+    <div class="drop-icon">🎬</div>
+    <div class="drop-title">Drop your video here</div>
+    <div class="drop-sub">or click to browse files</div>
+    <div class="drop-formats">MP4 · AVI · MOV · MKV · WEBM — max 50 MB</div>
+    <input type="file" id="file-input" accept="video/*">
+  </div>
+
+  <div class="file-info" id="file-info">
+    <div class="file-icon">🎥</div>
+    <div class="file-details">
+      <div class="file-name" id="file-name">video.mp4</div>
+      <div class="file-size" id="file-size">—</div>
+    </div>
+    <button class="remove-btn" id="remove-btn" title="Remove">✕</button>
+  </div>
+
+  <div class="error-msg" id="error-msg"></div>
+
+  <button class="analyze-btn" id="analyze-btn">Run Deepfake Analysis</button>
+
+  <!-- PROGRESS -->
+  <div class="progress-wrap" id="progress-wrap">
+    <div class="progress-label">
+      <span id="progress-text">Processing…</span>
+      <span id="progress-pct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <div class="progress-steps">
+      <div class="step" id="step-1"><div class="step-icon">→</div> Uploading video file</div>
+      <div class="step" id="step-2"><div class="step-icon">→</div> Extracting video frames</div>
+      <div class="step" id="step-3"><div class="step-icon">→</div> Preprocessing &amp; normalization</div>
+      <div class="step" id="step-4"><div class="step-icon">→</div> GRU temporal analysis</div>
+      <div class="step" id="step-5"><div class="step-icon">→</div> Generating prediction</div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-card" id="result-card">
+    <div class="verdict" id="verdict">
+      <div class="verdict-icon" id="verdict-icon"></div>
+      <div class="verdict-label" id="verdict-label"></div>
+      <div class="verdict-title" id="verdict-title"></div>
+      <div class="conf-bar-wrap">
+        <div class="conf-bar-track"><div class="conf-bar-fill" id="conf-bar"></div></div>
+      </div>
+      <div class="verdict-conf">Model confidence: <span id="verdict-conf-val"></span>%</div>
+    </div>
+
+    <div class="metrics-grid" id="metrics-grid"></div>
+
+    <button class="reset-btn" id="reset-btn">← Analyze Another Video</button>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<div class="how-section" id="how">
+  <div class="how-inner">
+    <p class="section-label">// methodology</p>
+    <h2 class="section-title">How It Works</h2>
+    <div class="steps-grid">
+      <div class="how-step">
+        <div class="how-num">01</div>
+        <div class="how-icon">📥</div>
+        <h3>Data Loading</h3>
+        <p>Video is uploaded and validated. Frame count, FPS, and duration are extracted using OpenCV.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-num">02</div>
+        <div class="how-icon">🖼️</div>
+        <h3>Frame Extraction</h3>
+        <p>16 evenly-spaced frames are sampled from the video, resized to 128×128, and normalized to [0,1].</p>
+      </div>
+      <div class="how-step">
+        <div class="how-num">03</div>
+        <div class="how-icon">🔬</div>
+        <h3>Preprocessing</h3>
+        <p>Noise reduction, pixel normalization, and motion stabilization prepare frames for model inference.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-num">04</div>
+        <div class="how-icon">🧠</div>
+        <h3>GRU Analysis</h3>
+        <p>Gated Recurrent Units analyze the frame sequence for temporal anomalies and pixel-level inconsistencies.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-num">05</div>
+        <div class="how-icon">📊</div>
+        <h3>Classification</h3>
+        <p>The model outputs a confidence score. Videos above the threshold are flagged as deepfake.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TECH STACK -->
+<section class="tech-section" id="tech">
+  <p class="section-label">// built with</p>
+  <h2 class="section-title">Technology Stack</h2>
+  <p class="section-desc">This system combines classical computer vision with modern deep learning to achieve real-time deepfake detection.</p>
+  <div class="tech-grid">
+    <div class="tech-pill">Python 3.10+</div>
+    <div class="tech-pill">Flask</div>
+    <div class="tech-pill">TensorFlow / Keras</div>
+    <div class="tech-pill">PyTorch</div>
+    <div class="tech-pill">OpenCV</div>
+    <div class="tech-pill">NumPy</div>
+    <div class="tech-pill">Pandas</div>
+    <div class="tech-pill">GRU Neural Network</div>
+    <div class="tech-pill">CNN Architecture</div>
+    <div class="tech-pill">MySQL</div>
+    <div class="tech-pill">XAMPP Server</div>
+    <div class="tech-pill">HTML / CSS / JS</div>
+  </div>
+</section>
+
+<footer>
+  <p>Built by <strong>Gangadhar Dharma Raju Gande</strong> — B.Tech CSE, GIET Rajahmundry 2025</p>
+  <p style="margin-top:.5rem;">
+    <a href="https://github.com/dharma3306" target="_blank">GitHub</a> ·
+    <a href="https://linkedin.com/in/gangadhar-raju" target="_blank">LinkedIn</a>
+  </p>
+</footer>
+
+<script>
+  const dropZone = document.getElementById('drop-zone');
+  const fileInput = document.getElementById('file-input');
+  const fileInfo = document.getElementById('file-info');
+  const fileName = document.getElementById('file-name');
+  const fileSize = document.getElementById('file-size');
+  const removeBtn = document.getElementById('remove-btn');
+  const analyzeBtn = document.getElementById('analyze-btn');
+  const progressWrap = document.getElementById('progress-wrap');
+  const progressBar = document.getElementById('progress-bar');
+  const progressPct = document.getElementById('progress-pct');
+  const progressText = document.getElementById('progress-text');
+  const resultCard = document.getElementById('result-card');
+  const errorMsg = document.getElementById('error-msg');
+
+  let selectedFile = null;
+
+  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) setFile(f);
+  });
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
+
+  function setFile(f) {
+    selectedFile = f;
+    fileName.textContent = f.name;
+    fileSize.textContent = formatBytes(f.size);
+    fileInfo.classList.add('show');
+    analyzeBtn.classList.add('show');
+    resultCard.classList.remove('show');
+    errorMsg.classList.remove('show');
+  }
+
+  function formatBytes(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+    return (b/1024/1024).toFixed(1) + ' MB';
+  }
+
+  removeBtn.addEventListener('click', resetAll);
+
+  function resetAll() {
+    selectedFile = null;
+    fileInput.value = '';
+    fileInfo.classList.remove('show');
+    analyzeBtn.classList.remove('show');
+    progressWrap.classList.remove('show');
+    resultCard.classList.remove('show');
+    errorMsg.classList.remove('show');
+    resetSteps();
+  }
+
+  document.getElementById('reset-btn').addEventListener('click', resetAll);
+
+  function resetSteps() {
+    for (let i = 1; i <= 5; i++) {
+      const s = document.getElementById('step-'+i);
+      s.classList.remove('done','active');
+    }
+    progressBar.style.width = '0';
+    progressPct.textContent = '0%';
+  }
+
+  function setStep(n) {
+    for (let i = 1; i < n; i++) {
+      document.getElementById('step-'+i).classList.remove('active');
+      document.getElementById('step-'+i).classList.add('done');
+      document.querySelector('#step-'+i+' .step-icon').textContent = '✓';
+    }
+    if (n <= 5) {
+      document.getElementById('step-'+n).classList.add('active');
+      document.querySelector('#step-'+n+' .step-icon').textContent = '◌';
+    }
+    const pct = Math.round((n-1)/5*100);
+    progressBar.style.width = pct + '%';
+    progressPct.textContent = pct + '%';
+  }
+
+  analyzeBtn.addEventListener('click', async () => {
+    if (!selectedFile) return;
+    analyzeBtn.disabled = true;
+    progressWrap.classList.add('show');
+    resultCard.classList.remove('show');
+    errorMsg.classList.remove('show');
+    resetSteps();
+
+    const steps = ['Uploading video file','Extracting video frames','Preprocessing & normalization','GRU temporal analysis','Generating prediction'];
+    for (let i = 1; i <= 5; i++) {
+      setStep(i);
+      progressText.textContent = steps[i-1];
+      if (i < 5) await sleep(600);
+    }
+
+    const form = new FormData();
+    form.append('video', selectedFile);
+
+    try {
+      const res = await fetch('/detect', { method: 'POST', body: form });
+      const data = await res.json();
+
+      // all done
+      for (let i = 1; i <= 5; i++) {
+        document.getElementById('step-'+i).classList.remove('active');
+        document.getElementById('step-'+i).classList.add('done');
+        document.querySelector('#step-'+i+' .step-icon').textContent = '✓';
+      }
+      progressBar.style.width = '100%';
+      progressPct.textContent = '100%';
+
+      if (data.error) { showError(data.error); }
+      else { showResult(data); }
+    } catch (e) {
+      showError('Network error. Please try again.');
+    }
+
+    analyzeBtn.disabled = false;
+  });
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function showError(msg) {
+    errorMsg.textContent = '⚠ ' + msg;
+    errorMsg.classList.add('show');
+  }
+
+  function showResult(d) {
+    const verdict = document.getElementById('verdict');
+    const isFake = d.is_fake;
+    verdict.className = 'verdict ' + (isFake ? 'fake' : 'real');
+    document.getElementById('verdict-icon').textContent = isFake ? '⚠️' : '✅';
+    document.getElementById('verdict-label').textContent = isFake ? 'Deepfake Detected' : 'Authentic Video';
+    document.getElementById('verdict-title').textContent = d.prediction;
+    document.getElementById('verdict-conf-val').textContent = d.confidence;
+
+    setTimeout(() => {
+      document.getElementById('conf-bar').style.width = d.confidence + '%';
+    }, 100);
+
+    const info = d.video_info;
+    const analysis = d.analysis;
+    const metrics = [
+      { title: 'Frames Analyzed', val: info.frames_analyzed, sub: 'of ' + info.total_frames + ' total' },
+      { title: 'Video Duration', val: info.duration_seconds + 's', sub: info.fps + ' FPS' },
+      { title: 'Temporal Score', val: (analysis.temporal_inconsistency * 1000).toFixed(2), sub: 'inconsistency index' },
+      { title: 'Processing Time', val: d.processing_time + 's', sub: 'end-to-end latency' },
+    ];
+
+    const grid = document.getElementById('metrics-grid');
+    grid.innerHTML = metrics.map(m => `
+      <div class="metric-card">
+        <div class="metric-title">${m.title}</div>
+        <div class="metric-val">${m.val}</div>
+        <div class="metric-sub">${m.sub}</div>
+      </div>
+    `).join('');
+
+    resultCard.classList.add('show');
+    resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+</script>
+</body>
+</html>

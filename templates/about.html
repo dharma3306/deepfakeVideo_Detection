@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>About — DeepGuard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#0a0c14; --surface:#111420; --card:#161b2e; --border:#1f2640;
+      --accent:#00d4aa; --text:#e2e8f0; --muted:#64748b;
+      --mono:'JetBrains Mono',monospace; --sans:'Space Grotesk',sans-serif;
+    }
+    body { background:var(--bg); color:var(--text); font-family:var(--sans); }
+    nav {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:1rem 2rem; border-bottom:1px solid var(--border);
+      background:rgba(10,12,20,.85); backdrop-filter:blur(12px);
+    }
+    .logo { font-weight:700; font-size:1.2rem; text-decoration:none; color:var(--text); display:flex; align-items:center; gap:.5rem; }
+    .logo-dot { width:8px; height:8px; border-radius:50%; background:var(--accent); }
+    .back { color:var(--muted); text-decoration:none; font-size:.9rem; transition:color .2s; }
+    .back:hover { color:var(--accent); }
+    .page { max-width:780px; margin:0 auto; padding:4rem 2rem; }
+    .badge { display:inline-block; background:rgba(0,212,170,.1); border:1px solid rgba(0,212,170,.25); color:var(--accent); padding:.3rem .8rem; border-radius:100px; font-size:.75rem; font-family:var(--mono); margin-bottom:1.5rem; letter-spacing:.05em; }
+    h1 { font-size:2.5rem; font-weight:700; letter-spacing:-0.03em; margin-bottom:1rem; }
+    h1 span { color:var(--accent); }
+    .lead { color:var(--muted); line-height:1.8; font-size:1.05rem; margin-bottom:3rem; }
+    h2 { font-size:1.3rem; font-weight:600; margin-bottom:1rem; margin-top:2.5rem; }
+    p { color:var(--muted); line-height:1.8; margin-bottom:1rem; }
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:2rem 0; }
+    .info-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:1.25rem; }
+    .info-label { font-family:var(--mono); font-size:.7rem; color:var(--accent); text-transform:uppercase; letter-spacing:.1em; margin-bottom:.4rem; }
+    .info-val { font-size:.95rem; color:var(--text); font-weight:500; }
+    .tech-list { list-style:none; display:flex; flex-wrap:wrap; gap:.6rem; margin:1.5rem 0; }
+    .tech-list li { background:var(--card); border:1px solid var(--border); padding:.4rem 1rem; border-radius:100px; font-family:var(--mono); font-size:.78rem; color:var(--muted); }
+    .qa { margin:1.5rem 0; }
+    .qa-q { font-weight:600; margin-bottom:.4rem; color:var(--text); }
+    .qa-a { color:var(--muted); line-height:1.7; }
+    footer { border-top:1px solid var(--border); padding:2rem; text-align:center; color:var(--muted); font-size:.85rem; margin-top:4rem; }
+    footer a { color:var(--accent); text-decoration:none; }
+    @media(max-width:600px){ .info-grid{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+<nav>
+  <a class="logo" href="/"><div class="logo-dot"></div>DeepGuard</a>
+  <a class="back" href="/">← Back to Detector</a>
+</nav>
+
+<div class="page">
+  <div class="badge">Final Year Project — B.Tech CSE 2025</div>
+  <h1>Harnessing AI for<br><span>Deepfake Detection</span></h1>
+  <p class="lead">A GRU-based video analysis system built to identify AI-generated manipulations with 92% accuracy, real-time processing at 24 FPS, and 25% fewer false positives than baseline CNN methods.</p>
+
+  <div class="info-grid">
+    <div class="info-card"><div class="info-label">Developer</div><div class="info-val">Gangadhar Dharma Raju Gande</div></div>
+    <div class="info-card"><div class="info-label">Institution</div><div class="info-val">GIET College, Rajahmundry</div></div>
+    <div class="info-card"><div class="info-label">Degree</div><div class="info-val">B.Tech — Computer Science &amp; Engineering</div></div>
+    <div class="info-card"><div class="info-label">Year</div><div class="info-val">2021 – 2025</div></div>
+    <div class="info-card"><div class="info-label">Detection Accuracy</div><div class="info-val">92% on test dataset</div></div>
+    <div class="info-card"><div class="info-label">Dataset Size</div><div class="info-val">10,000+ real &amp; fake videos</div></div>
+  </div>
+
+  <h2>Abstract</h2>
+  <p>In the era of digital communication, deepfake technology poses a critical threat to the integrity of information disseminated online. These AI-generated videos can realistically depict individuals saying or doing things they never did, with significant implications for public discourse, human rights, and digital media authenticity.</p>
+  <p>This project develops a robust detection system using Gated Recurrent Units (GRUs) to identify manipulated videos by analyzing pixel-level discrepancies and temporal anomalies across video frames. The model is trained on over 10,000 authentic and deepfake videos and achieves real-time detection at 24 FPS on standard hardware.</p>
+
+  <h2>Technology Stack</h2>
+  <ul class="tech-list">
+    <li>Python 3.10+</li><li>Flask</li><li>TensorFlow / Keras</li><li>PyTorch</li>
+    <li>OpenCV</li><li>NumPy</li><li>Pandas</li><li>GRU Neural Network</li>
+    <li>CNN Architecture</li><li>MySQL</li><li>XAMPP</li><li>HTML / CSS / JS</li>
+  </ul>
+
+  <h2>Interview Q&amp;A</h2>
+
+  <div class="qa">
+    <div class="qa-q">Q1: What motivated you to choose deepfake detection as your project?</div>
+    <div class="qa-a">Deepfakes are a major and rapidly growing threat to online trust and security. I wanted to work on a solution that combines AI and real-world impact, helping people and organizations verify digital content and fight misinformation.</div>
+  </div>
+  <div class="qa">
+    <div class="qa-q">Q2: How does your deepfake detection system work?</div>
+    <div class="qa-a">The system analyzes video frames using a GRU-based AI model. GRUs capture subtle sequence changes and pixel anomalies that indicate fake content. We preprocess the video, extract 16 evenly-spaced frames, and the model predicts whether the video is genuine or manipulated with a confidence score.</div>
+  </div>
+  <div class="qa">
+    <div class="qa-q">Q3: Why did you use GRU instead of other neural networks?</div>
+    <div class="qa-a">GRUs are well-suited for time-series and frame-sequence analysis, making them ideal for video content. They use fewer resources than LSTMs, so the model is fast and practical for real-time detection — crucial for production deployment.</div>
+  </div>
+  <div class="qa">
+    <div class="qa-q">Q4: What challenges did you face and how did you overcome them?</div>
+    <div class="qa-a">The biggest challenges were managing large video datasets and tuning the model to minimize false positives. We addressed this by optimizing frame selection strategies, applying data augmentation, and carefully tuning GRU hyperparameters — achieving 25% fewer false positives than baseline CNN methods.</div>
+  </div>
+  <div class="qa">
+    <div class="qa-q">Q5: What are the future improvements you plan?</div>
+    <div class="qa-a">The project can be expanded to cover deepfake audio detection and integrated into social media platforms for live content verification. We also plan to explore transformer-based architectures and build a real-time streaming pipeline for platforms like YouTube or Amazon Video.</div>
+  </div>
+
+  <h2>My Role in the Project</h2>
+  <p>I was actively involved across all stages: data collection and labeling of real and deepfake video datasets, video preprocessing using OpenCV (frame extraction, resizing, normalization), designing and training the CNN/GRU model using TensorFlow/Keras, evaluating performance using accuracy and loss metrics, and integrating prediction results with a MySQL database backend.</p>
+</div>
+
+<footer>
+  <p>Gangadhar Dharma Raju Gande · B.Tech CSE · GIET Rajahmundry 2025</p>
+  <p style="margin-top:.5rem;">
+    <a href="https://github.com/dharma3306" target="_blank">GitHub: dharma3306</a> ·
+    <a href="https://linkedin.com/in/gangadhar-raju" target="_blank">LinkedIn</a>
+  </p>
+</footer>
+</body>
+</html>
